@@ -11,7 +11,7 @@ from PyQt5.QtGui import QImage, QPainter, QPixmap
 from PyQt5.QtCore import QFile, pyqtSlot
 from PyQt5.QtGui import QKeySequence
 from PyQt5.uic import loadUi
-from PyQt5.QtWidgets import (QAction, QRadioButton,QCheckBox, QActionGroup, QApplication, QFrame,
+from PyQt5.QtWidgets import (QAction, QRadioButton,QCheckBox, QActionGroup, QAbstractItemView, QApplication, QFrame,
         QLabel, QMainWindow, QMenu, QMessageBox, QSizePolicy, QVBoxLayout,
         QWidget,QTextEdit,QGraphicsScene,QTableWidget,QFileDialog, QTabWidget,QHBoxLayout,QFormLayout,QLineEdit)
 
@@ -56,6 +56,8 @@ class Plot(QWidget):
                 self.graphicsView.setScene(self.scene)
                 os.remove('foo.png')
                 plt.close()
+            else:
+                QMessageBox.about(self, 'Important', "X and Y axis cannot be same")
             
 
     def plotSmoothLines(self):
@@ -79,6 +81,9 @@ class Plot(QWidget):
                 self.graphicsView.setScene(self.scene)
                 os.remove('foo.png')
                 plt.close()
+            else:
+                QMessageBox.about(self, 'Important', "X and Y axis cannot be same")
+        
 
     def plotLines(self):
         if(not df.empty):
@@ -98,18 +103,32 @@ class Plot(QWidget):
                 self.graphicsView.setScene(self.scene)
                 os.remove('foo.png')
                 plt.close()
+            else:
+                QMessageBox.about(self, 'Important', "X and Y axis cannot be same !!")
 
     def saveAsPNG(self):
-        pass
+        if(not df.empty):
+            imgPath, _ = QtWidgets.QFileDialog.getSaveFileName(self.graphicsView, "Save Image", 
+                       "Image.png","PNG (*.png)")
+            if(imgPath is not None):
+                print("save")
+                pixMap = QPixmap()
+                pixMap = self.graphicsView.grab()
+                pixMap.save(imgPath)
+
+        else:
+            QMessageBox.about(self, 'Important', "Please Load Data First !!")
+
+        
+        
 
 
 i = 1    
 class MainWindow(QMainWindow):
-
+    windowList = []
     def __init__(self):
         super(MainWindow, self).__init__()
         loadUi('hi.ui', self)
-        self.recentFileActs = []
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.fileName = ""
@@ -128,24 +147,27 @@ class MainWindow(QMainWindow):
         self.actionNew.triggered.connect(self.newFile)
         self.actionLoad.triggered.connect(self.loadFile)
         self.actionSave.triggered.connect(self.writeCsv)
+        self.actionAdd_Row_3.triggered.connect(self.addRow)
+        self.actionRemove_Row.triggered.connect(self.removeRow)
+        self.actionAdd_Column_3.triggered.connect(self.addColumn)
+        self.actionRemove_Column.triggered.connect(self.removeColumn)
         self.actionExit.triggered.connect(self.close)
 
         # Trigger Event for Edit Menu
+        self.actionEdit_Data.triggered.connect(self.editData)
         self.actionCopy.triggered.connect(self.copyByContext)
         self.actionPaste.triggered.connect(self.pasteByContext)
         self.actionCut.triggered.connect(self.cutByContext)
-        self.actionAdd_Row.triggered.connect(self.addRow)
-        self.actionDelete_Row.triggered.connect(self.removeRow)
-        self.actionAdd_Column.triggered.connect(self.addColumn)
-        self.actionDelete_Column.triggered.connect(self.removeColumn)
+        
         
         # Trigger Event for Plot Menu
         self.actionPlot_Data.triggered.connect(self.plot)
 
     @pyqtSlot()
     def closeMyTab(self):
-        global i
+        global i,df
         i -= 1
+        df = df.iloc[0:0]
         index = self.tabWidget.currentIndex()
         self.tabWidget.removeTab(index)
 
@@ -170,10 +192,11 @@ class MainWindow(QMainWindow):
         else:
             self.saveAs()
 
-    def openRecentFile(self):
-        action = self.sender()
-        if action:
-            self.loadFile(action.data())
+    def editData(self, fileName):
+        if(not df.empty):
+            self.tableView.setEditTriggers(QAbstractItemView.EditKeyPressed |
+                             QAbstractItemView.DoubleClicked)
+
 
 
     def loadFile(self, fileName):
@@ -192,45 +215,35 @@ class MainWindow(QMainWindow):
            with f:
                self.fname = os.path.splitext(str(fileName))[0].split("/")[-1]
                self.tabWidget.setTabText(self.tabWidget.currentIndex(),self.fname)
-               if mytext.count(';') <= mytext.count('\t'):
-                   reader = csv.reader(f, delimiter = ',')
-                   self.model.clear()
-                   for row in reader:    
-                       items = [QtGui.QStandardItem(field) for field in row]
-                       self.model.appendRow(items)
-                   self.tableView.resizeColumnsToContents()
-               else:
-                   reader = csv.reader(f, delimiter = ',')
-                   self.model.clear()
-                   for row in reader:    
-                       items = [QtGui.QStandardItem(field) for field in row]
-                       self.model.appendRow(items)
-                   self.tableView.resizeColumnsToContents()
+               reader = csv.reader(f, delimiter = ',')
+               self.model.clear()
+               for row in reader:    
+                   items = [QtGui.QStandardItem(field) for field in row]
+                   self.model.appendRow(items)
+               self.tableView.resizeColumnsToContents()
 
 
     def writeCsv(self, fileName):
        # find empty cells
+       global df
        if(not df.empty):
-           for row in range(self.model.rowCount()):
-               for column in range(self.model.columnCount()):
-                   myitem = self.model.item(row,column)
-                   if myitem is None:
-                       item = QtGui.QStandardItem("")
-                       self.model.setItem(row, column, item)
-           fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", 
-                       (QtCore.QDir.homePath() + "/" + self.fname + ".csv"),"CSV Files (*.csv)")
+           fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", self.fname, "CSV (*.csv *.tsv)")
            if fileName:
-               print(fileName)
-               f = open(fileName, 'w')
-               with f:
-                   writer = csv.writer(f, delimiter = ',')
-                   for rowNumber in range(self.model.rowCount()):
-                       fields = [self.model.data(self.model.index(rowNumber, columnNumber),
-                                        QtCore.Qt.DisplayRole)
-                        for columnNumber in range(self.model.columnCount())]
-                       writer.writerow(fields)
+               with open(fileName, 'w', newline='') as stream:
+                   print("saving", fileName)
+                   writer = csv.writer(stream, delimiter=',')
+                   for row in range(self.model.rowCount()):
+                       rowdata = []
+                       for column in range(self.model.columnCount()):
+                           item = self.model.item(row, column)
+                           if item is not None:
+                               rowdata.append(item.text())
+                           else:
+                               rowdata.append('')
+                       writer.writerow(rowdata)
                    self.fname = os.path.splitext(str(fileName))[0].split("/")[-1]
                    self.setWindowTitle(self.fname)
+               df = pd.read_csv(fileName)
 
 
     def addRow(self):
@@ -298,44 +311,6 @@ class MainWindow(QMainWindow):
     def selectData(self):
         pass
 
-
-    
-def stylesheet(self):
-       return """
-       QTableView
-       {
-border: 1px solid grey;
-border-radius: 0px;
-font-size: 12px;
-background-color: #f8f8f8;
-selection-color: white;
-selection-background-color: #00ED56;
-       }
- 
-QTableView QTableCornerButton::section {
-    background: #D6D1D1;
-    border: 1px outset black;
-}
- 
-QPushButton
-{
-font-size: 11px;
-border: 1px inset grey;
-height: 24px;
-width: 80px;
-color: black;
-background-color: #e8e8e8;
-background-position: bottom-left;
-} 
- 
-QPushButton::hover
-{
-border: 2px inset goldenrod;
-font-weight: bold;
-color: #e8e8e8;
-background-color: green;
-} 
-"""
 
 if __name__ == '__main__':
 

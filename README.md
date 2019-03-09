@@ -35,7 +35,7 @@ Main Tab : First loads the template from "main.ui"
   b] Copy      : Copies data of single cell
   c] Paste     : Pastes data on single cell
   d] Cut       : Copy and Remove dara of single cell
-  
+   
 3] Plot Menu:
    
    Plot Tab : First loads the template from "plt.ui"

@@ -9,7 +9,7 @@ Steps to run this application :<br />
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iv]   pip install scipy<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v]    pip install matplotlib<br />
 3] Inorder to open the application run the following command:<br/>
-   python demo.py<br  />
+    &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;python demo.py<br  />
 
 Name of Application : QtPy<br />
 

@@ -362,3 +362,4 @@ if __name__ == '__main__':
     main.setWindowTitle("QtPy")
     main.show()
     sys.exit(app.exec_())
+        

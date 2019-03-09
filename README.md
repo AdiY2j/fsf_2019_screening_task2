@@ -1,13 +1,13 @@
 # fsf_2019_screening_task2
 
-Steps to run this application :<br/>
+Steps to run this application :<br />
 1] Download and extract all the files in a folder<br />
-2] Install Python(3.5) and PyQt5 and other dependencies<br/>
-    i]    pip install pyqt5<br/>
-    ii]   pip install numpy<br/>
-    iii]  pip install pandas<br/>
-    iv]   pip install scipy<br/>
-    v]    pip install matplotlib<br />
+2] Install Python(3.5) and PyQt5 and other dependencies<br />
+    &nbsp;&nbsp;&nbsp;i]    pip install pyqt5<br/>
+    &nbsp;&nbsp;&nbsp;ii]   pip install numpy<br/>
+    &nbsp;&nbsp;&nbsp;iii]  pip install pandas<br/>
+    &nbsp;&nbsp;&nbsp;iv]   pip install scipy<br/>
+    &nbsp;&nbsp;&nbsp;v]    pip install matplotlib<br />
 3] Inorder to open the application run the following command:<br/>
    python demo.py<br  />
 

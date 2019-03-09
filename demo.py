@@ -1,3 +1,4 @@
+# Import all the necessary packages
 import csv, codecs 
 import os
 import numpy as np
@@ -5,19 +6,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import (FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from scipy.interpolate import interp1d
-from PyQt5.QtCore import QFile, QFileInfo, QSettings, Qt, QTextStream
+from PyQt5.QtCore import QFile, QFileInfo, QSettings, Qt, QTextStream, pyqtSlot
 from PyQt5 import QtCore, QtGui, QtWidgets, QtPrintSupport
-from PyQt5.QtGui import QImage, QPainter, QPixmap
-from PyQt5.QtCore import QFile, pyqtSlot
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtGui import QImage, QPainter, QPixmap, QKeySequence
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import (QAction, QRadioButton,QCheckBox, QActionGroup, QAbstractItemView, QApplication, QFrame,
-        QLabel, QMainWindow, QMenu, QMessageBox, QSizePolicy, QVBoxLayout,
+        QLabel, QMainWindow,QStyleFactory, QMenu, QMessageBox, QSizePolicy, QVBoxLayout,
         QWidget,QTextEdit,QGraphicsScene,QTableWidget,QFileDialog, QTabWidget,QHBoxLayout,QFormLayout,QLineEdit)
 
 df = pd.DataFrame()
 
-
+# Plot class which contains 3 methods: 1] Scatter Points, 2] Smooth Lines and 3] Line Plot
 class Plot(QWidget):
     def __init__(self):
         super(Plot, self).__init__()
@@ -40,7 +39,7 @@ class Plot(QWidget):
                 self.selectY.addItem(list1[j])
 
         
-
+    # Plotting Scatter Points
     def plotScatterPoints(self):
         if(not df.empty):
             print("points")
@@ -65,7 +64,7 @@ class Plot(QWidget):
             QMessageBox.about(self, 'Important', "Please Load Data First !!")
         
             
-
+    # Plotting Scatter Points with Smooth Lines
     def plotSmoothLines(self):
         if(not df.empty):
             x_axis = self.selectX.currentText()
@@ -93,7 +92,7 @@ class Plot(QWidget):
             QMessageBox.about(self, 'Important', "Please Load Data First !!")
         
         
-
+    # Plotting Simple Line Plots
     def plotLines(self):
         if(not df.empty):
             x_axis = self.selectX.currentText()
@@ -138,7 +137,7 @@ class MainWindow(QMainWindow):
     windowList = []
     def __init__(self):
         super(MainWindow, self).__init__()
-        loadUi('hi.ui', self)
+        loadUi('main.ui', self)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.fileName = ""
@@ -181,8 +180,6 @@ class MainWindow(QMainWindow):
         else:
             pass
 
-
-    
     def closeMyTab(self):
         global i,df
         i -= 1
@@ -199,8 +196,8 @@ class MainWindow(QMainWindow):
     def finishedEdit(self):
        self.tableView.resizeColumnsToContents()
 
+
     def newFile(self):
-        #self.tabWidget.addTab(Plot(), "tab")
         other = MainWindow()
         MainWindow.windowList.append(other)
         other.show()
@@ -211,14 +208,6 @@ class MainWindow(QMainWindow):
         self.tabWidget.setCurrentIndex(i)
         i += 1
         	
-    def save(self):
-        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
-            if self.curFile:
-                self.saveFile(self.curFile)
-            else:
-                self.saveAs()
-        else:
-            pass
 
     def editData(self, fileName):
         if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
@@ -242,7 +231,6 @@ class MainWindow(QMainWindow):
                 print(fileName)
                 ff = open(fileName, 'r')
                 mytext = ff.read()
-#                print(mytext)
                 ff.close()
                 f = open(fileName, 'r')
                 with f:
@@ -260,7 +248,6 @@ class MainWindow(QMainWindow):
 
     def writeCsv(self, fileName):
         if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
-           # find empty cells
             global df
             if(not df.empty):
                 fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", self.fname, "CSV (*.csv *.tsv)")
@@ -278,7 +265,6 @@ class MainWindow(QMainWindow):
                                     rowdata.append('')
                             writer.writerow(rowdata)
                         self.fname = os.path.splitext(str(fileName))[0].split("/")[-1]
-                        self.setWindowTitle(self.fname)
                     df = pd.read_csv(fileName)
         else:
             pass
@@ -361,11 +347,6 @@ class MainWindow(QMainWindow):
     def strippedName(self, fullFileName):
         return QFileInfo(fullFileName).fileName()
 
-    def Undo(self):
-        pass
-
-    def Redo(self):
-        pass
 
 
 if __name__ == '__main__':
@@ -374,9 +355,10 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     app.setApplicationName('My Window')
+    app.setStyle(QStyleFactory.create("Windows"))
     main = MainWindow()
     main.setMinimumSize(820, 300)
     main.setGeometry(50,50,1200,700)
-    main.setWindowTitle("CSV Viewer")
+    main.setWindowTitle("QtPy")
     main.show()
     sys.exit(app.exec_())

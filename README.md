@@ -40,7 +40,7 @@ Main Tab : First loads the template from "main.ui"<br />
    
    Plot Tab : First loads the template from "plt.ui"<br />
    
-   a] Plot Data : <br />
+   a] Plot Data : (Plotting Data with appropriate X & Y-axis label and a title)<br /> 
       GUI has:<br/>
       i] 2 comboBox where user is allowed to select 2 attributes from all the available one<br/>
       ii] 4 Buttons : <br/>

@@ -31,11 +31,14 @@ class Plot(QWidget):
         list1 = list(df)
         n = len(list1)
         print(list1)
-        for j in range(0,n):
-            self.selectX.addItem(list1[j])
-            self.selectY.addItem(list1[j])
+        if(df.empty):
+            self.selectX.clear()
+            self.selectY.clear()
+        else:
+            for j in range(0,n):
+                self.selectX.addItem(list1[j])
+                self.selectY.addItem(list1[j])
 
-        
         
 
     def plotScatterPoints(self):
@@ -57,7 +60,10 @@ class Plot(QWidget):
                 os.remove('foo.png')
                 plt.close()
             else:
-                QMessageBox.about(self, 'Important', "X and Y axis cannot be same")
+                QMessageBox.about(self, 'Important', "X and Y axis cannot be same !!")
+        else:
+            QMessageBox.about(self, 'Important', "Please Load Data First !!")
+        
             
 
     def plotSmoothLines(self):
@@ -82,7 +88,10 @@ class Plot(QWidget):
                 os.remove('foo.png')
                 plt.close()
             else:
-                QMessageBox.about(self, 'Important', "X and Y axis cannot be same")
+                QMessageBox.about(self, 'Important', "X and Y axis cannot be same !!")
+        else:
+            QMessageBox.about(self, 'Important', "Please Load Data First !!")
+        
         
 
     def plotLines(self):
@@ -105,11 +114,14 @@ class Plot(QWidget):
                 plt.close()
             else:
                 QMessageBox.about(self, 'Important', "X and Y axis cannot be same !!")
+        else:
+            QMessageBox.about(self, 'Important', "Please Load Data First !!")
+                
 
     def saveAsPNG(self):
         if(not df.empty):
             imgPath, _ = QtWidgets.QFileDialog.getSaveFileName(self.graphicsView, "Save Image", 
-                       "Image.png","PNG (*.png)")
+                        "Image.png","PNG (*.png)")
             if(imgPath is not None):
                 print("save")
                 pixMap = QPixmap()
@@ -118,8 +130,6 @@ class Plot(QWidget):
 
         else:
             QMessageBox.about(self, 'Important', "Please Load Data First !!")
-
-        
         
 
 
@@ -147,6 +157,7 @@ class MainWindow(QMainWindow):
         self.actionNew.triggered.connect(self.newFile)
         self.actionLoad.triggered.connect(self.loadFile)
         self.actionSave.triggered.connect(self.writeCsv)
+        self.actionSave_as_PNG.triggered.connect(self.saveasPNG)
         self.actionAdd_Row_3.triggered.connect(self.addRow)
         self.actionRemove_Row.triggered.connect(self.removeRow)
         self.actionAdd_Column_3.triggered.connect(self.addColumn)
@@ -164,12 +175,26 @@ class MainWindow(QMainWindow):
         self.actionPlot_Data.triggered.connect(self.plot)
 
     @pyqtSlot()
+    def saveasPNG(self):
+        if((self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            Plot().saveAsPNG()
+        else:
+            pass
+
+
+    
     def closeMyTab(self):
         global i,df
         i -= 1
-        df = df.iloc[0:0]
-        index = self.tabWidget.currentIndex()
-        self.tabWidget.removeTab(index)
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            df = df.iloc[0:0]
+            if QMessageBox.question(None, '', "Are you sure you want to quit?",QMessageBox.Yes | QMessageBox.No,QMessageBox.No) == QMessageBox.Yes:
+                self.close()
+            else:
+                pass
+        else:
+            index = self.tabWidget.currentIndex()
+            self.tabWidget.removeTab(index)
 
     def finishedEdit(self):
        self.tableView.resizeColumnsToContents()
@@ -187,116 +212,150 @@ class MainWindow(QMainWindow):
         i += 1
         	
     def save(self):
-        if self.curFile:
-            self.saveFile(self.curFile)
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            if self.curFile:
+                self.saveFile(self.curFile)
+            else:
+                self.saveAs()
         else:
-            self.saveAs()
+            pass
 
     def editData(self, fileName):
-        if(not df.empty):
-            self.tableView.setEditTriggers(QAbstractItemView.EditKeyPressed |
-                             QAbstractItemView.DoubleClicked)
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            if(not df.empty):
+                self.tableView.setEditTriggers(QAbstractItemView.EditKeyPressed |
+                                 QAbstractItemView.DoubleClicked)
+        else:
+            pass
 
 
 
     def loadFile(self, fileName):
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open CSV",
-               (QtCore.QDir.homePath()), "CSV (*.csv *.tsv)")
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            
+            fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open CSV",
+                   (QtCore.QDir.homePath()), "CSV (*.csv *.tsv)")
  
-        if fileName:
-           global df
-           df = pd.read_csv(fileName)
-           print(fileName)
-           ff = open(fileName, 'r')
-           mytext = ff.read()
-#            print(mytext)
-           ff.close()
-           f = open(fileName, 'r')
-           with f:
-               self.fname = os.path.splitext(str(fileName))[0].split("/")[-1]
-               self.tabWidget.setTabText(self.tabWidget.currentIndex(),self.fname)
-               reader = csv.reader(f, delimiter = ',')
-               self.model.clear()
-               for row in reader:    
-                   items = [QtGui.QStandardItem(field) for field in row]
-                   self.model.appendRow(items)
-               self.tableView.resizeColumnsToContents()
+            if fileName:
+                global df
+                df = pd.read_csv(fileName)
+                print(fileName)
+                ff = open(fileName, 'r')
+                mytext = ff.read()
+#                print(mytext)
+                ff.close()
+                f = open(fileName, 'r')
+                with f:
+                    self.fname = os.path.splitext(str(fileName))[0].split("/")[-1]
+                    self.tabWidget.setTabText(self.tabWidget.currentIndex(),self.fname)
+                    reader = csv.reader(f, delimiter = ',')
+                    self.model.clear()
+                    for row in reader:    
+                        items = [QtGui.QStandardItem(field) for field in row]
+                        self.model.appendRow(items)
+                    self.tableView.resizeColumnsToContents()
+        else:
+            pass
 
 
     def writeCsv(self, fileName):
-       # find empty cells
-       global df
-       if(not df.empty):
-           fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", self.fname, "CSV (*.csv *.tsv)")
-           if fileName:
-               with open(fileName, 'w', newline='') as stream:
-                   print("saving", fileName)
-                   writer = csv.writer(stream, delimiter=',')
-                   for row in range(self.model.rowCount()):
-                       rowdata = []
-                       for column in range(self.model.columnCount()):
-                           item = self.model.item(row, column)
-                           if item is not None:
-                               rowdata.append(item.text())
-                           else:
-                               rowdata.append('')
-                       writer.writerow(rowdata)
-                   self.fname = os.path.splitext(str(fileName))[0].split("/")[-1]
-                   self.setWindowTitle(self.fname)
-               df = pd.read_csv(fileName)
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+           # find empty cells
+            global df
+            if(not df.empty):
+                fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save File", self.fname, "CSV (*.csv *.tsv)")
+                if fileName:
+                    with open(fileName, 'w', newline='') as stream:
+                        print("saving", fileName)
+                        writer = csv.writer(stream, delimiter=',')
+                        for row in range(self.model.rowCount()):
+                            rowdata = []
+                            for column in range(self.model.columnCount()):
+                                item = self.model.item(row, column)
+                                if item is not None:
+                                    rowdata.append(item.text())
+                                else:
+                                    rowdata.append('')
+                            writer.writerow(rowdata)
+                        self.fname = os.path.splitext(str(fileName))[0].split("/")[-1]
+                        self.setWindowTitle(self.fname)
+                    df = pd.read_csv(fileName)
+        else:
+            pass
 
 
     def addRow(self):
-        item = QtGui.QStandardItem("")
-        self.model.appendRow(item)
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            item = QtGui.QStandardItem("")
+            self.model.appendRow(item)
+        else:
+            pass
 
     def removeRow(self):
-       model = self.model
-       indices = self.tableView.selectionModel().selectedRows() 
-       for index in sorted(indices):
-           model.removeRow(index.row())
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            model = self.model
+            indices = self.tableView.selectionModel().selectedRows() 
+            for index in sorted(indices):
+                model.removeRow(index.row())
+        else:
+            pass
 
  
     def removeColumn(self):
-        model = self.model
-        indices = self.tableView.selectionModel().selectedColumns() 
-        for index in sorted(indices):
-            model.removeColumn(index.column()) 
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            model = self.model
+            indices = self.tableView.selectionModel().selectedColumns() 
+            for index in sorted(indices):
+                model.removeColumn(index.column())
+        else:
+            pass
  
     def addColumn(self):
-        count = self.model.columnCount()
-        print (count)
-        self.model.setColumnCount(count + 1)
-        self.model.setData(self.model.index(0, count), "", 0)
-        self.tableView.resizeColumnsToContents()
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            count = self.model.columnCount()
+            print (count)
+            self.model.setColumnCount(count + 1)
+            self.model.setData(self.model.index(0, count), "", 0)
+            self.tableView.resizeColumnsToContents()
+        else:
+            pass
  
  
     def copyByContext(self, event):
-        for i in self.tableView.selectionModel().selection().indexes():
-            row = i.row()
-            col = i.column()
-            myitem = self.model.item(row,col)
-            if myitem is not None:
-                clip = QtWidgets.QApplication.clipboard()
-                clip.setText(myitem.text())
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            for i in self.tableView.selectionModel().selection().indexes():
+                row = i.row()
+                col = i.column()
+                myitem = self.model.item(row,col)
+                if myitem is not None:
+                    clip = QtWidgets.QApplication.clipboard()
+                    clip.setText(myitem.text())
+        else:
+            pass
  
     def pasteByContext(self, event):
-        for i in self.tableView.selectionModel().selection().indexes():
-            row = i.row()
-            col = i.column()
-            myitem = self.model.item(row,col)
-            clip = QtWidgets.QApplication.clipboard()
-            myitem.setText(clip.text())
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            for i in self.tableView.selectionModel().selection().indexes():
+                row = i.row()
+                col = i.column()
+                myitem = self.model.item(row,col)
+                clip = QtWidgets.QApplication.clipboard()
+                myitem.setText(clip.text())
+        else:
+            pass
  
     def cutByContext(self, event):
-        for i in self.tableView.selectionModel().selection().indexes():
-            row = i.row()
-            col = i.column()
-            myitem = self.model.item(row,col)
-            if myitem is not None:
-                clip = QtWidgets.QApplication.clipboard()
-                clip.setText(myitem.text())
-                myitem.setText("")
+        if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
+            for i in self.tableView.selectionModel().selection().indexes():
+                row = i.row()
+                col = i.column()
+                myitem = self.model.item(row,col)
+                if myitem is not None:
+                    clip = QtWidgets.QApplication.clipboard()
+                    clip.setText(myitem.text())
+                    myitem.setText("")
+        else:
+            pass
 
 
     def strippedName(self, fullFileName):
@@ -306,9 +365,6 @@ class MainWindow(QMainWindow):
         pass
 
     def Redo(self):
-        pass
-
-    def selectData(self):
         pass
 
 

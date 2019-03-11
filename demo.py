@@ -38,6 +38,8 @@ class Plot(QWidget):
                 self.selectX.addItem(list1[j])
                 self.selectY.addItem(list1[j])
 
+
+
         
     # Plotting Scatter Points
     def plotScatterPoints(self):
@@ -185,7 +187,7 @@ class MainWindow(QMainWindow):
         i -= 1
         if(not (self.tabWidget.tabText(self.tabWidget.currentIndex())) == "Plot"):
             df = df.iloc[0:0]
-            if QMessageBox.question(None, '', "Are you sure you want to quit?",QMessageBox.Yes | QMessageBox.No,QMessageBox.No) == QMessageBox.Yes:
+            if QMessageBox.question(self, '', "Are you sure you want to quit?",QMessageBox.Yes | QMessageBox.No,QMessageBox.No) == QMessageBox.Yes:
                 self.close()
             else:
                 pass
@@ -228,6 +230,7 @@ class MainWindow(QMainWindow):
             if fileName:
                 global df
                 df = pd.read_csv(fileName)
+                df = df + np.random.rand(*df.shape) / 100000.0
                 print(fileName)
                 ff = open(fileName, 'r')
                 mytext = ff.read()
@@ -362,4 +365,3 @@ if __name__ == '__main__':
     main.setWindowTitle("QtPy")
     main.show()
     sys.exit(app.exec_())
-        
